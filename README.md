@@ -17,6 +17,8 @@ How to use:
 Features :
 ------------
 * Voxel file import for [MagicalVoxel](http://voxel.codeplex.com/)
+* Mesh Optimization
+* ~~Level of detail~~ (TODO)
 
 Requirements:
 ========
