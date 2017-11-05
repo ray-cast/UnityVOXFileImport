@@ -406,6 +406,8 @@ namespace Cubizer
 						ObjFileExport.WriteToFile(outpath, meshFilter, new Vector3(-0.1f, 0.1f, 0.1f));
 
 						AssetDatabase.Refresh();
+						AssetDatabase.MoveAsset("Assets/Materials/" + name + "Mat.mat", "Assets/" + name + ".mat");
+						AssetDatabase.Refresh();
 
 						meshFilter.mesh = AssetDatabase.LoadAssetAtPath<Mesh>(outpath);
 					}
@@ -417,7 +419,7 @@ namespace Cubizer
 					{
 						if (renderer.sharedMaterial != null)
 						{
-							var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/" + name + "Mat.mat");
+							var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/" + name + ".mat");
 							if (material != null)
 							{
 								material.mainTexture = renderer.sharedMaterial.mainTexture;
