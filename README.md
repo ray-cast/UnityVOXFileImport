@@ -16,7 +16,6 @@ How to use:
 
 Features :
 ------------
-* Cube-based infinite terrain generation
 * Voxel file import for [MagicalVoxel](http://voxel.codeplex.com/)
 
 Requirements:
