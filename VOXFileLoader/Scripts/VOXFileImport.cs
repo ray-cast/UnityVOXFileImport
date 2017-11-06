@@ -45,7 +45,6 @@ namespace Cubizer
 			public byte[] name;
 			public Int32 chunkContent;
 			public Int32 chunkNums;
-			public Int32 voxelNums;
 			public byte[] voxels;
 		}
 
@@ -184,12 +183,11 @@ namespace Cubizer
 
 							chunk.xyzi.chunkContent = reader.ReadInt32();
 							chunk.xyzi.chunkNums = reader.ReadInt32();
-							chunk.xyzi.voxelNums = reader.ReadInt32();
-
 							if (chunk.xyzi.chunkNums != 0)
 								throw new System.Exception("Bad Token: chunk nums is " + chunk.xyzi.chunkNums + ",i t should be 0.");
 
-							chunk.xyzi.voxels = new byte[chunk.xyzi.voxelNums * 4];
+							var voxelNums = reader.ReadInt32();
+							chunk.xyzi.voxels = new byte[voxelNums * 4];
 							if (reader.Read(chunk.xyzi.voxels, 0, chunk.xyzi.voxels.Length) != chunk.xyzi.voxels.Length)
 								throw new System.Exception("Failed to read voxels");
 

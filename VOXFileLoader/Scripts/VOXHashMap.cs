@@ -130,26 +130,26 @@ namespace Cubizer
 				_allocSize = 0;
 			}
 
-			public VOXHashMap(Vector3Int bound, int allocSize)
+			public VOXHashMap(Vector3Int bound, int count)
 			{
 				_count = 0;
 				_bound = bound;
 				_allocSize = 0;
-				this.Create(allocSize);
+				this.Create(count);
 			}
 
-			public VOXHashMap(int bound_x, int bound_y, int bound_z, int allocSize)
+			public VOXHashMap(int bound_x, int bound_y, int bound_z, int count)
 			{
 				_count = 0;
 				_bound = new Vector3Int(bound_x, bound_y, bound_z);
 				_allocSize = 0;
-				this.Create(allocSize);
+				this.Create(count);
 			}
 
-			public void Create(int allocSize)
+			public void Create(int count)
 			{
 				int usage = 1;
-				while (usage < allocSize) usage = usage << 1 | 1;
+				while (usage < count) usage = usage << 1 | 1;
 
 				_count = 0;
 				_allocSize = usage;

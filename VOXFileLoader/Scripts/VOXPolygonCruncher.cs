@@ -308,9 +308,9 @@ namespace Cubizer
 
 			public static VoxelModel CalcVoxelCruncher(VoxFileChunkChild chunk)
 			{
-				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxelNums);
+				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxels.Length / 4);
 
-				for (int j = 0; j < chunk.xyzi.voxelNums * 4; j += 4)
+				for (int j = 0; j < chunk.xyzi.voxels.Length; j += 4)
 				{
 					var x = chunk.xyzi.voxels[j];
 					var y = chunk.xyzi.voxels[j + 1];
