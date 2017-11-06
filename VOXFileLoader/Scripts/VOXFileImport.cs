@@ -420,7 +420,26 @@ namespace Cubizer
 							var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/" + name + ".mat");
 							if (material != null)
 							{
-								material.mainTexture = renderer.sharedMaterial.mainTexture;
+								var outpath = "Assets/" + name + ".png";
+
+								using (FileStream file = File.Open(outpath, FileMode.Create))
+								{
+									BinaryWriter writer = new BinaryWriter(file);
+									writer.Write(((Texture2D)renderer.sharedMaterial.mainTexture).EncodeToPNG());
+									file.Close();
+								}
+
+								AssetDatabase.Refresh();
+
+								TextureImporter textureImporter = AssetImporter.GetAtPath(outpath) as TextureImporter;
+								textureImporter.textureType = TextureImporterType.Default;
+								textureImporter.textureCompression = TextureImporterCompression.Uncompressed;
+								textureImporter.npotScale = TextureImporterNPOTScale.ToNearest;
+								textureImporter.wrapMode = TextureWrapMode.Clamp;
+
+								AssetDatabase.ImportAsset(outpath);
+
+								material.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(outpath);
 
 								renderer.sharedMaterial = material;
 							}
@@ -447,5 +466,5 @@ namespace Cubizer
 		}
 
 #endif
+		}
 	}
-}
