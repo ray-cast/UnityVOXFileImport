@@ -1,7 +1,7 @@
 MagicaVoxel for Unity 2017
 ========
 ### VOXFileLoader ###
-　　The VOXFileLoader is a .vox reader to convert the .vox file from [MagicaVoxel](http://voxel.codeplex.com/) to static GameObject and Prefab with optimized obj file.
+　　The VOXFileLoader is a .vox reader to convert the .vox file from [MagicaVoxel](https://ephtracy.github.io/) to static GameObject and Prefab with optimized obj file.
 
 ![Alt](./Screenshots/screenshots.png)
 
