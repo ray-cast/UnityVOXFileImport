@@ -61,7 +61,7 @@ namespace Cubizer
 				float a = 0 + 1.0f / 32.0f;
 				float b = s - 1.0f / 32.0f;
 
-				for (int i = 0; i < 6; i++, index++)
+				for (int i = 0; i < 6; i++)
 				{
 					if (!visiable[i])
 						continue;
@@ -88,6 +88,8 @@ namespace Cubizer
 
 					for (int j = index * 6, k = 0; k < 6; k++, j++)
 						triangles[j] = index * 4 + _indices[i, k];
+
+					index++;
 				}
 			}
 
