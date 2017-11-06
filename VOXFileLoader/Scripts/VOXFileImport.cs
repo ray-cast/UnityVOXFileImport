@@ -292,9 +292,9 @@ namespace Cubizer
 					}
 
 					if (palette[it.material].a < 255)
-						entities["alpha"] += 6;
+						entities["alpha"] += facesCount;
 					else
-						entities["opaque"] += 6;
+						entities["opaque"] += facesCount;
 				}
 
 				return entities.Count;
@@ -325,7 +325,7 @@ namespace Cubizer
 								continue;
 
 							var index = 0;
-							var allocSize = cruncher.voxels.Length * 6;
+							var allocSize = entity.Value;
 
 							var vertices = new Vector3[allocSize * 4];
 							var normals = new Vector3[allocSize * 4];
