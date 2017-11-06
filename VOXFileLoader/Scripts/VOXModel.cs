@@ -4,7 +4,7 @@ namespace Cubizer
 {
 	namespace Model
 	{
-		public class VoxelModel
+		public class VOXModel
 		{
 			private static Vector3[,] _positions = new Vector3[6, 4]
 			{
@@ -46,9 +46,9 @@ namespace Cubizer
 				{ 0, 3, 1, 0, 2, 3 }
 			};
 
-			public VoxelCruncher[] voxels;
+			public VOXCruncher[] voxels;
 
-			public VoxelModel(VoxelCruncher[] array)
+			public VOXModel(VOXCruncher[] array)
 			{
 				voxels = array;
 			}
@@ -93,7 +93,7 @@ namespace Cubizer
 				}
 			}
 
-			public static void CreateCubeMesh16x16(VoxelCruncher it, ref Vector3[] vertices, ref Vector3[] normals, ref Vector2[] uv, ref int[] triangles, ref int index)
+			public static void CreateCubeMesh16x16(VOXCruncher it, ref Vector3[] vertices, ref Vector3[] normals, ref Vector2[] uv, ref int[] triangles, ref int index)
 			{
 				Vector3 pos;
 				pos.x = (it.begin_x + it.end_x + 1) * 0.5f;
@@ -105,7 +105,7 @@ namespace Cubizer
 				scale.y = (it.end_y + 1 - it.begin_y);
 				scale.z = (it.end_z + 1 - it.begin_z);
 
-				VoxelModel.CreateCubeMesh16x16(ref vertices, ref normals, ref uv, ref triangles, ref index, it.faces, pos, scale, (uint)it.material);
+				VOXModel.CreateCubeMesh16x16(ref vertices, ref normals, ref uv, ref triangles, ref index, it.faces, pos, scale, (uint)it.material);
 			}
 		}
 	}

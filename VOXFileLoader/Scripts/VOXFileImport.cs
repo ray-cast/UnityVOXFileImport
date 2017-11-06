@@ -274,7 +274,7 @@ namespace Cubizer
 				return CreateTextureFromColor16x16(CreateColor32FromPelatte(palette));
 			}
 
-			public static int CalcFaceCountAsAllocate(VoxelModel model, Color32[] palette, ref Dictionary<string, int> entities)
+			public static int CalcFaceCountAsAllocate(VOXModel model, Color32[] palette, ref Dictionary<string, int> entities)
 			{
 				entities.Add("alpha", 0);
 				entities.Add("opaque", 0);
@@ -336,7 +336,7 @@ namespace Cubizer
 
 							foreach (var it in cruncher.voxels)
 							{
-								VoxelModel.CreateCubeMesh16x16(it, ref vertices, ref normals, ref uv, ref triangles, ref index);
+								VOXModel.CreateCubeMesh16x16(it, ref vertices, ref normals, ref uv, ref triangles, ref index);
 								isTransparent |= (colors[it.material].a < 255) ? true : false;
 							}
 
@@ -463,8 +463,8 @@ namespace Cubizer
 				var voxel = VoxFileImport.Load(path);
 				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path), outpath);
 			}
-		}
 
 #endif
+		}
 	}
 }

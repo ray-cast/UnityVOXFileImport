@@ -30,7 +30,7 @@ namespace Cubizer
 			}
 		}
 
-		public class VoxelCruncher
+		public class VOXCruncher
 		{
 			public byte begin_x;
 			public byte begin_y;
@@ -43,7 +43,7 @@ namespace Cubizer
 			public VOXMaterial material;
 			public VOXVisiableFaces faces;
 
-			public VoxelCruncher(byte begin_x, byte end_x, byte begin_y, byte end_y, byte begin_z, byte end_z, VOXMaterial _material)
+			public VOXCruncher(byte begin_x, byte end_x, byte begin_y, byte end_y, byte begin_z, byte end_z, VOXMaterial _material)
 			{
 				this.begin_x = begin_x;
 				this.begin_y = begin_y;
@@ -62,7 +62,7 @@ namespace Cubizer
 				faces.back = true;
 			}
 
-			public VoxelCruncher(byte begin_x, byte end_x, byte begin_y, byte end_y, byte begin_z, byte end_z, VOXVisiableFaces _faces, VOXMaterial _material)
+			public VOXCruncher(byte begin_x, byte end_x, byte begin_y, byte end_y, byte begin_z, byte end_z, VOXVisiableFaces _faces, VOXMaterial _material)
 			{
 				this.begin_x = begin_x;
 				this.begin_y = begin_y;
@@ -79,9 +79,9 @@ namespace Cubizer
 
 		public class VOXPolygonCruncher
 		{
-			public static VoxelModel CalcVoxelCruncher(VOXHashMap map)
+			public static VOXModel CalcVoxelCruncher(VOXHashMap map)
 			{
-				var listX = new List<VoxelCruncher>[map.bound.z, map.bound.y];
+				var listX = new List<VOXCruncher>[map.bound.z, map.bound.y];
 
 				for (int z = 0; z < map.bound.z; z++)
 				{
@@ -115,9 +115,9 @@ namespace Cubizer
 							}
 
 							if (listX[z, y] == null)
-								listX[z, y] = new List<VoxelCruncher>();
+								listX[z, y] = new List<VOXCruncher>();
 
-							listX[z, y].Add(new VoxelCruncher((byte)x, (byte)(x_end), (byte)y, (byte)(y), (byte)z, (byte)(z), entityLast));
+							listX[z, y].Add(new VOXCruncher((byte)x, (byte)(x_end), (byte)y, (byte)(y), (byte)z, (byte)(z), entityLast));
 
 							x = x_end;
 						}
@@ -155,7 +155,9 @@ namespace Cubizer
 										}
 									}
 
-									if (it.begin_x > cur.begin_x)
+									if (it.begin_x > cur.begin_x || it.end_x > cur.end_x ||
+										it.begin_y > cur.begin_y || it.end_y > cur.end_y ||
+										it.begin_z > cur.begin_z || it.end_z > cur.end_z)
 									{
 										h = ushort.MaxValue;
 										break;
@@ -196,8 +198,7 @@ namespace Cubizer
 											break;
 										}
 									}
-
-									if (it.begin_x > cur.begin_x || it.end_x > cur.end_x ||
+									else if (it.begin_x > cur.begin_x || it.end_x > cur.end_x ||
 										it.begin_y > cur.begin_y || it.end_y > cur.end_y ||
 										it.begin_z > cur.begin_z || it.end_z > cur.end_z)
 									{
@@ -223,7 +224,7 @@ namespace Cubizer
 					}
 				}
 
-				var array = new VoxelCruncher[numbers];
+				var array = new VOXCruncher[numbers];
 
 				numbers = 0;
 				for (byte z = 0; z < map.bound.z; z++)
@@ -303,10 +304,10 @@ namespace Cubizer
 					}
 				}
 
-				return new VoxelModel(array);
+				return new VOXModel(array);
 			}
 
-			public static VoxelModel CalcVoxelCruncher(VoxFileChunkChild chunk)
+			public static VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk)
 			{
 				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxels.Length / 4);
 
