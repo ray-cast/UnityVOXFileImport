@@ -33,7 +33,7 @@ Contact :
 -------------------------------------------------------------------------------
     Copyright (C) 2016-2017 Ray-MMD Developers. All rights reserved.
 
-    https://github.com/ray-cast/ray-mmd
+    https://github.com/ray-cast/UnityVOXFileImport
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
