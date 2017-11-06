@@ -325,12 +325,12 @@ namespace Cubizer
 								continue;
 
 							var index = 0;
-							var allocSize = cruncher.voxels.Length * 6 * 6;
+							var allocSize = cruncher.voxels.Length * 6;
 
-							var vertices = new Vector3[allocSize];
-							var normals = new Vector3[allocSize];
-							var uv = new Vector2[allocSize];
-							var triangles = new int[allocSize];
+							var vertices = new Vector3[allocSize * 4];
+							var normals = new Vector3[allocSize * 4];
+							var uv = new Vector2[allocSize * 4];
+							var triangles = new int[allocSize * 6];
 
 							bool isTransparent = false;
 
@@ -388,7 +388,7 @@ namespace Cubizer
 
 #if UNITY_EDITOR
 
-			public static GameObject LoadVoxelFileAsPrefab(VoxFileData voxel, string name)
+			public static GameObject LoadVoxelFileAsPrefab(VoxFileData voxel, string name, string path = "Assets/")
 			{
 				GameObject gameObject = null;
 
@@ -399,12 +399,12 @@ namespace Cubizer
 					var meshFilter = gameObject.GetComponent<MeshFilter>();
 					if (meshFilter != null)
 					{
-						var outpath = "Assets/" + name + ".obj";
+						var outpath = path + name + ".obj";
 
 						ObjFileExport.WriteToFile(outpath, meshFilter, new Vector3(-0.1f, 0.1f, 0.1f));
 
 						AssetDatabase.Refresh();
-						AssetDatabase.MoveAsset("Assets/Materials/" + name + "Mat.mat", "Assets/" + name + ".mat");
+						AssetDatabase.MoveAsset("Assets/Materials/" + name + "Mat.mat", path + name + ".mat");
 						AssetDatabase.Refresh();
 
 						meshFilter.mesh = AssetDatabase.LoadAssetAtPath<Mesh>(outpath);
@@ -417,10 +417,10 @@ namespace Cubizer
 					{
 						if (renderer.sharedMaterial != null)
 						{
-							var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/" + name + ".mat");
+							var material = AssetDatabase.LoadAssetAtPath<Material>(path + name + ".mat");
 							if (material != null)
 							{
-								var outpath = "Assets/" + name + ".png";
+								var outpath = path + name + ".png";
 
 								using (FileStream file = File.Open(outpath, FileMode.Create))
 								{
@@ -446,9 +446,9 @@ namespace Cubizer
 						}
 					}
 
-					GameObject prefab = PrefabUtility.CreatePrefab("Assets/" + name + ".prefab", gameObject);
+					GameObject prefab = PrefabUtility.CreatePrefab(path + name + ".prefab", gameObject);
 					if (prefab == null)
-						UnityEngine.Debug.LogError(Selection.activeObject.name + ": failed to save prefab");
+						UnityEngine.Debug.LogError(Selection.activeObject.name + ": Failed to save prefab");
 
 					return prefab;
 				}
@@ -458,13 +458,13 @@ namespace Cubizer
 				}
 			}
 
-			public static GameObject LoadVoxelFileAsPrefab(string path)
+			public static GameObject LoadVoxelFileAsPrefab(string path, string outpath = "Assets/")
 			{
 				var voxel = VoxFileImport.Load(path);
-				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path));
+				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path), outpath);
 			}
 		}
 
 #endif
-		}
 	}
+}

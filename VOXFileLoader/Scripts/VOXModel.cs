@@ -61,15 +61,13 @@ namespace Cubizer
 				float a = 0 + 1.0f / 32.0f;
 				float b = s - 1.0f / 32.0f;
 
-				for (int i = 0; i < 6; i++)
+				for (int i = 0; i < 6; i++, index++)
 				{
 					if (!visiable[i])
 						continue;
 
-					for (int j = 0; j < 6; j++, index++)
+					for (int n = index * 4, k = 0; k < 4; k++, n++)
 					{
-						int k = _indices[i, j];
-
 						Vector3 v = _positions[i, k] * 0.5f;
 						v.x *= scale.x;
 						v.y *= scale.y;
@@ -83,11 +81,13 @@ namespace Cubizer
 						coord.x = du + (_uvs[i, k].x > 0 ? b : a);
 						coord.y = dv + (_uvs[i, k].y > 0 ? b : a);
 
-						vertices[index] = v;
-						normals[index] = _normals[i];
-						uv[index] = coord;
-						triangles[index] = index;
+						vertices[n] = v;
+						normals[n] = _normals[i];
+						uv[n] = coord;
 					}
+
+					for (int j = index * 6, k = 0; k < 6; k++, j++)
+						triangles[j] = index * 4 + _indices[i, k];
 				}
 			}
 
