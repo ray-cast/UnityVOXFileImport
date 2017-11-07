@@ -313,7 +313,7 @@ namespace Cubizer
 
 					foreach (var chunk in voxel.chunkChild)
 					{
-						var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(chunk);
+						var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(chunk, colors);
 
 						var entities = new Dictionary<string, int>();
 						if (CalcFaceCountAsAllocate(cruncher, colors, ref entities) == 0)

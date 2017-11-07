@@ -79,7 +79,59 @@ namespace Cubizer
 
 		public class VOXPolygonCruncher
 		{
-			public static VOXModel CalcVoxelCruncher(VOXHashMap map)
+			public static bool GetVisiableFaces(VOXHashMap map, VOXHashMapNode<System.Byte> it, Color32[] palette, out VOXVisiableFaces faces)
+			{
+				VOXMaterial[] instanceID = new VOXMaterial[6] { VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue };
+
+				var x = (byte)it.x;
+				var y = (byte)it.y;
+				var z = (byte)it.z;
+
+				if (x >= 1) map.Get((byte)(x - 1), y, z, ref instanceID[0]);
+				if (y >= 1) map.Get(x, (byte)(y - 1), z, ref instanceID[2]);
+				if (z >= 1) map.Get(x, y, (byte)(z - 1), ref instanceID[4]);
+				if (x <= map.bound.x) map.Get((byte)(x + 1), y, z, ref instanceID[1]);
+				if (y <= map.bound.y) map.Get(x, (byte)(y + 1), z, ref instanceID[3]);
+				if (z <= map.bound.z) map.Get(x, y, (byte)(z + 1), ref instanceID[5]);
+
+				var alpha = palette[it.element].a;
+				if (alpha < 255)
+				{
+					bool f1 = (instanceID[0] == VOXMaterial.MaxValue) ? true : palette[instanceID[0]].a != alpha ? true : false;
+					bool f2 = (instanceID[1] == VOXMaterial.MaxValue) ? true : palette[instanceID[1]].a != alpha ? true : false;
+					bool f3 = (instanceID[2] == VOXMaterial.MaxValue) ? true : palette[instanceID[2]].a != alpha ? true : false;
+					bool f4 = (instanceID[3] == VOXMaterial.MaxValue) ? true : palette[instanceID[3]].a != alpha ? true : false;
+					bool f5 = (instanceID[4] == VOXMaterial.MaxValue) ? true : palette[instanceID[4]].a != alpha ? true : false;
+					bool f6 = (instanceID[5] == VOXMaterial.MaxValue) ? true : palette[instanceID[5]].a != alpha ? true : false;
+
+					faces.left = f1;
+					faces.right = f2;
+					faces.bottom = f3;
+					faces.top = f4;
+					faces.front = f5;
+					faces.back = f6;
+				}
+				else
+				{
+					bool f1 = (instanceID[0] == VOXMaterial.MaxValue) ? true : palette[instanceID[0]].a < 255 ? true : false;
+					bool f2 = (instanceID[1] == VOXMaterial.MaxValue) ? true : palette[instanceID[1]].a < 255 ? true : false;
+					bool f3 = (instanceID[2] == VOXMaterial.MaxValue) ? true : palette[instanceID[2]].a < 255 ? true : false;
+					bool f4 = (instanceID[3] == VOXMaterial.MaxValue) ? true : palette[instanceID[3]].a < 255 ? true : false;
+					bool f5 = (instanceID[4] == VOXMaterial.MaxValue) ? true : palette[instanceID[4]].a < 255 ? true : false;
+					bool f6 = (instanceID[5] == VOXMaterial.MaxValue) ? true : palette[instanceID[5]].a < 255 ? true : false;
+
+					faces.left = f1;
+					faces.right = f2;
+					faces.bottom = f3;
+					faces.top = f4;
+					faces.front = f5;
+					faces.back = f6;
+				}
+
+				return faces.left | faces.right | faces.bottom | faces.top | faces.front | faces.back;
+			}
+
+			public static VOXModel CalcVoxelCruncher(VOXHashMap map, Color32[] palette)
 			{
 				var listX = new List<VOXCruncher>[map.bound.z, map.bound.y];
 
@@ -307,7 +359,7 @@ namespace Cubizer
 				return new VOXModel(array);
 			}
 
-			public static VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk)
+			public static VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk, Color32[] palette)
 			{
 				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxels.Length / 4);
 
@@ -321,7 +373,17 @@ namespace Cubizer
 					map.Set(x, y, z, c);
 				}
 
-				return CalcVoxelCruncher(map);
+				VOXHashMap map2 = new VOXHashMap(map.bound, map.Count / 2);
+				foreach (var it in map.GetEnumerator())
+				{
+					VOXVisiableFaces faces;
+					if (!GetVisiableFaces(map, it, palette, out faces))
+						continue;
+
+					map2.Set(it.x, it.y, it.z, it.element);
+				}
+
+				return CalcVoxelCruncher(map2, palette);
 			}
 		}
 	}

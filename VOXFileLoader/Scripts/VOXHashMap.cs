@@ -208,7 +208,7 @@ namespace Cubizer
 					if (entry.x == x && entry.y == y && entry.z == z)
 					{
 						instanceID = entry.element;
-						return true;
+						return instanceID != VOXMaterial.MaxValue;
 					}
 
 					index = (index + 1) & _allocSize;
