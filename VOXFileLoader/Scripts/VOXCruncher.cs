@@ -111,22 +111,18 @@ namespace Cubizer
 
 		public class VOXCruncherCulled : VOXCruncherStrategy
 		{
-			public static bool GetVisiableFaces(VOXHashMap map, VOXHashMapNode<System.Byte> it, Color32[] palette, out VOXVisiableFaces faces)
+			public static bool GetVisiableFaces(VOXMaterial[,,] map, Vector3Int bound, int x, int y, int z, VOXMaterial material, Color32[] palette, out VOXVisiableFaces faces)
 			{
 				VOXMaterial[] instanceID = new VOXMaterial[6] { VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue, VOXMaterial.MaxValue };
 
-				var x = it.x;
-				var y = it.y;
-				var z = it.z;
+				if (x >= 1) instanceID[0] = map[(byte)(x - 1), y, z];
+				if (y >= 1) instanceID[2] = map[x, (byte)(y - 1), z];
+				if (z >= 1) instanceID[4] = map[x, y, (byte)(z - 1)];
+				if (x <= bound.x) instanceID[1] = map[(byte)(x + 1), y, z];
+				if (y <= bound.y) instanceID[3] = map[x, (byte)(y + 1), z];
+				if (z <= bound.z) instanceID[5] = map[x, y, (byte)(z + 1)];
 
-				if (x >= 1) map.Get((byte)(x - 1), y, z, ref instanceID[0]);
-				if (y >= 1) map.Get(x, (byte)(y - 1), z, ref instanceID[2]);
-				if (z >= 1) map.Get(x, y, (byte)(z - 1), ref instanceID[4]);
-				if (x <= map.bound.x) map.Get((byte)(x + 1), y, z, ref instanceID[1]);
-				if (y <= map.bound.y) map.Get(x, (byte)(y + 1), z, ref instanceID[3]);
-				if (z <= map.bound.z) map.Get(x, y, (byte)(z + 1), ref instanceID[5]);
-
-				var alpha = palette[it.element].a;
+				var alpha = palette[material].a;
 				if (alpha < 255)
 				{
 					bool f1 = (instanceID[0] == VOXMaterial.MaxValue) ? true : palette[instanceID[0]].a != alpha ? true : false;
@@ -165,7 +161,14 @@ namespace Cubizer
 
 			public VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk, Color32[] palette)
 			{
-				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxels.Length / 4);
+				var map = new VOXMaterial[chunk.size.x, chunk.size.z, chunk.size.y];
+
+				for (int i = 0; i < chunk.size.x; ++i)
+				{
+					for (int j = 0; j < chunk.size.y; ++j)
+						for (int k = 0; k < chunk.size.z; ++k)
+							map[i, k, j] = VOXMaterial.MaxValue;
+				}
 
 				for (int j = 0; j < chunk.xyzi.voxels.Length; j += 4)
 				{
@@ -174,24 +177,30 @@ namespace Cubizer
 					var z = chunk.xyzi.voxels[j + 2];
 					var c = chunk.xyzi.voxels[j + 3];
 
-					map.Set(x, z, y, c);
+					map[x, z, y] = c;
 				}
 
 				var crunchers = new List<VOXCruncher>();
-				foreach (var it in map.GetEnumerator())
+				var bound = new Vector3Int(chunk.size.x, chunk.size.z, chunk.size.y);
+
+				for (int j = 0; j < chunk.xyzi.voxels.Length; j += 4)
 				{
+					var x = chunk.xyzi.voxels[j];
+					var y = chunk.xyzi.voxels[j + 1];
+					var z = chunk.xyzi.voxels[j + 2];
+					var c = chunk.xyzi.voxels[j + 3];
+
 					VOXVisiableFaces faces;
-					if (!GetVisiableFaces(map, it, palette, out faces))
+					if (!GetVisiableFaces(map, bound, x, z, y, c, palette, out faces))
 						continue;
 
-					crunchers.Add(new VOXCruncher(it.x, it.x, it.y, it.y, it.z, it.z, faces, it.element));
+					crunchers.Add(new VOXCruncher(x, x, z, z, y, y, faces, c));
 				}
 
 				var array = new VOXCruncher[crunchers.Count];
 
 				int numbers = 0;
-				foreach (var it in crunchers)
-					array[numbers++] = it;
+				foreach (var it in crunchers) array[numbers++] = it;
 
 				return new VOXModel(array);
 			}
@@ -199,17 +208,6 @@ namespace Cubizer
 
 		public class VOXCruncherGreedy : VOXCruncherStrategy
 		{
-			public static int F(VOXHashMap map, int i, int j, int k)
-			{
-				Debug.Assert(i >= 0 && i < map.bound.x);
-				Debug.Assert(j >= 0 && i < map.bound.y);
-				Debug.Assert(k >= 0 && i < map.bound.z);
-
-				VOXMaterial material = 0;
-				map.Get((byte)i, (byte)j, (byte)k, ref material);
-				return material;
-			}
-
 			public VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk, Color32[] palette)
 			{
 				var map = new VOXMaterial[chunk.size.x, chunk.size.z, chunk.size.y];
