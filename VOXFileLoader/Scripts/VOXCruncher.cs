@@ -201,6 +201,10 @@ namespace Cubizer
 		{
 			public static int F(VOXHashMap map, int i, int j, int k)
 			{
+				Debug.Assert(i >= 0 && i < map.bound.x);
+				Debug.Assert(j >= 0 && i < map.bound.y);
+				Debug.Assert(k >= 0 && i < map.bound.z);
+
 				VOXMaterial material = 0;
 				map.Get((byte)i, (byte)j, (byte)k, ref material);
 				return material;
@@ -208,7 +212,14 @@ namespace Cubizer
 
 			public VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk, Color32[] palette)
 			{
-				var map = new VOXHashMap(new Vector3Int(chunk.size.x, chunk.size.y, chunk.size.z), chunk.xyzi.voxels.Length / 4);
+				var map = new VOXMaterial[chunk.size.x, chunk.size.z, chunk.size.y];
+
+				for (int i = 0; i < chunk.size.x; ++i)
+				{
+					for (int j = 0; j < chunk.size.y; ++j)
+						for (int k = 0; k < chunk.size.z; ++k)
+							map[i, k, j] = VOXMaterial.MaxValue;
+				}
 
 				for (int j = 0; j < chunk.xyzi.voxels.Length; j += 4)
 				{
@@ -217,12 +228,14 @@ namespace Cubizer
 					var z = chunk.xyzi.voxels[j + 2];
 					var c = chunk.xyzi.voxels[j + 3];
 
-					map.Set(x, z, y, c);
+					map[x, z, y] = c;
 				}
 
-				int[] dims = new int[] { map.bound.x, map.bound.y, map.bound.z };
-
 				var crunchers = new List<VOXCruncher>();
+				var dims = new int[] { chunk.size.x, chunk.size.z, chunk.size.y };
+
+				var alloc = System.Math.Max(dims[0], System.Math.Max(dims[1], dims[2]));
+				var mask = new int[alloc * alloc];
 
 				for (var d = 0; d < 3; ++d)
 				{
@@ -234,8 +247,6 @@ namespace Cubizer
 
 					q[d] = 1;
 
-					var mask = new int[dims[u] * dims[v]];
-
 					var faces = new VOXVisiableFaces(false, false, false, false, false, false);
 
 					for (x[d] = -1; x[d] < dims[d];)
@@ -246,8 +257,8 @@ namespace Cubizer
 						{
 							for (x[u] = 0; x[u] < dims[u]; ++x[u])
 							{
-								var a = x[d] >= 0 ? F(map, x[0], x[1], x[2]) : VOXMaterial.MaxValue;
-								var b = x[d] < dims[d] - 1 ? F(map, x[0] + q[0], x[1] + q[1], x[2] + q[2]) : VOXMaterial.MaxValue;
+								var a = x[d] >= 0 ? map[x[0], x[1], x[2]] : VOXMaterial.MaxValue;
+								var b = x[d] < dims[d] - 1 ? map[x[0] + q[0], x[1] + q[1], x[2] + q[2]] : VOXMaterial.MaxValue;
 								if (a != b)
 								{
 									if (a == VOXMaterial.MaxValue)
@@ -312,9 +323,9 @@ namespace Cubizer
 								var v1 = new Vector3(x[0], x[1], x[2]);
 								var v2 = new Vector3(x[0] + du[0] + dv[0], x[1] + du[1] + dv[1], x[2] + du[2] + dv[2]);
 
-								v2.x = Mathf.Max(0, v2.x - 1);
-								v2.y = Mathf.Max(0, v2.y - 1);
-								v2.z = Mathf.Max(0, v2.z - 1);
+								v2.x = System.Math.Max(v2.x - 1, 0);
+								v2.y = System.Math.Max(v2.y - 1, 0);
+								v2.z = System.Math.Max(v2.z - 1, 0);
 
 								if (c > 0)
 								{
