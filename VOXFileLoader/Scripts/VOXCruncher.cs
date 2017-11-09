@@ -94,6 +94,7 @@ namespace Cubizer
 			public VOXModel CalcVoxelCruncher(VoxFileChunkChild chunk, Color32[] palette)
 			{
 				var crunchers = new VOXCruncher[chunk.xyzi.voxels.Length / 4];
+				var faces = new VOXVisiableFaces(true, true, true, true, true, true);
 
 				for (int i = 0, n = 0; i < chunk.xyzi.voxels.Length; i += 4, n++)
 				{
@@ -102,7 +103,7 @@ namespace Cubizer
 					var z = chunk.xyzi.voxels[i + 2];
 					var c = chunk.xyzi.voxels[i + 3];
 
-					crunchers[n] = new VOXCruncher(x, x, y, y, z, z, c);
+					crunchers[n] = new VOXCruncher(x, x, z, z, y, y, faces, c);
 				}
 
 				return new VOXModel(crunchers);
@@ -200,7 +201,8 @@ namespace Cubizer
 				var array = new VOXCruncher[crunchers.Count];
 
 				int numbers = 0;
-				foreach (var it in crunchers) array[numbers++] = it;
+				foreach (var it in crunchers)
+					array[numbers++] = it;
 
 				return new VOXModel(array);
 			}
@@ -268,7 +270,7 @@ namespace Cubizer
 								}
 								else
 								{
-									mask[n++] = 0;
+									mask[n++] = VOXMaterial.MaxValue;
 								}
 							}
 						}
@@ -282,7 +284,7 @@ namespace Cubizer
 							for (var i = 0; i < dims[u];)
 							{
 								var c = mask[n];
-								if (c == 0)
+								if (c == VOXMaterial.MaxValue)
 								{
 									++i; ++n;
 									continue;
@@ -292,7 +294,7 @@ namespace Cubizer
 								var h = 1;
 								var k = 0;
 
-								for (; c == mask[n + w] && (i + w) < dims[u]; ++w) { }
+								for (; (i + w) < dims[u] && c == mask[n + w]; ++w) { }
 
 								var done = false;
 								for (; (j + h) < dims[v]; ++h)
@@ -350,7 +352,7 @@ namespace Cubizer
 								for (var l = 0; l < h; ++l)
 								{
 									for (k = 0; k < w; ++k)
-										mask[n + k + l * dims[u]] = 0;
+										mask[n + k + l * dims[u]] = VOXMaterial.MaxValue;
 								}
 
 								i += w; n += w;
