@@ -14,7 +14,7 @@ How to use:
 * Select .vox file in the project view
 * Click 'Create Prefab from .vox file' button, you'll get a prefab and obj file from project view
 
-Features :
+Features:
 ------------
 * Voxel file import for [MagicalVoxel](http://voxel.codeplex.com/)
 * Mesh Optimization
@@ -24,7 +24,7 @@ Requirements:
 ========
 * Unity 2017.2.0 or higher
 
-Contact :
+Contact:
 ------------
 
 * Reach me via Twitter: [@Rui](https://twitter.com/Rui_cg).
@@ -51,3 +51,7 @@ Contact :
     BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
     AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+References:
+--------
+* Meshing in a Minecraft Game \[[link](https://0fps.net/2012/07/07/meshing-minecraft-part-2/)\]
