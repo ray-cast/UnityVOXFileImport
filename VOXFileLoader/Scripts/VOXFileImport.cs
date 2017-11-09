@@ -276,7 +276,6 @@ namespace Cubizer
 
 			public static int CalcFaceCountAsAllocate(VOXModel model, Color32[] palette, ref Dictionary<string, int> entities)
 			{
-				entities.Add("alpha", 0);
 				entities.Add("opaque", 0);
 
 				foreach (var it in model.voxels)
@@ -291,10 +290,7 @@ namespace Cubizer
 							facesCount++;
 					}
 
-					if (palette[it.material].a < 255)
-						entities["alpha"] += facesCount;
-					else
-						entities["opaque"] += facesCount;
+					entities["opaque"] += facesCount;
 				}
 
 				return entities.Count;
@@ -313,7 +309,7 @@ namespace Cubizer
 
 					foreach (var chunk in voxel.chunkChild)
 					{
-						var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(chunk, colors);
+						var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(chunk, colors, VOXCruncherMode.Greedy);
 
 						var entities = new Dictionary<string, int>();
 						if (CalcFaceCountAsAllocate(cruncher, colors, ref entities) == 0)
@@ -359,14 +355,6 @@ namespace Cubizer
 								meshRenderer.material = new Material(Shader.Find("Mobile/Diffuse"));
 								meshRenderer.material.mainTexture = texture;
 #endif
-
-								Bounds bound = new Bounds();
-								foreach (var it in mesh.vertices)
-									bound.Encapsulate(it);
-
-								BoxCollider collider = gameObject.AddComponent<BoxCollider>();
-								collider.center = bound.center;
-								collider.size = bound.size;
 							}
 						}
 					}
