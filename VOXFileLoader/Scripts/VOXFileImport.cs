@@ -43,7 +43,7 @@ namespace Cubizer
 			public byte[] name;
 			public Int32 chunkContent;
 			public Int32 chunkNums;
-			public byte[] voxels;
+			public VoxData voxels;
 		}
 
 		public struct VoxFileRGBA
@@ -85,6 +85,142 @@ namespace Cubizer
 			public VoxFileRGBA palette;
 		}
 
+		public class VoxData
+		{
+			public int x, y, z;
+			public int[,,] voxels;
+
+			public int count
+			{
+				get
+				{
+					int _count = 0;
+
+					for (int i = 0; i < x; ++i)
+					{
+						for (int j = 0; j < y; ++j)
+							for (int k = 0; k < z; ++k)
+								if (voxels[i, j, k] != int.MaxValue)
+									_count++;
+					}
+
+					return _count;
+				}
+			}
+
+			public VoxData()
+			{
+				x = 0; y = 0; z = 0;
+			}
+
+			public VoxData(byte[] _voxels, int xx, int yy, int zz)
+			{
+				x = xx;
+				y = zz;
+				z = yy;
+				voxels = new int[x, y, z];
+
+				for (int i = 0; i < x; ++i)
+				{
+					for (int j = 0; j < y; ++j)
+						for (int k = 0; k < z; ++k)
+							voxels[i, j, k] = int.MaxValue;
+				}
+
+				for (int j = 0; j < _voxels.Length; j += 4)
+				{
+					var x = _voxels[j];
+					var y = _voxels[j + 1];
+					var z = _voxels[j + 2];
+					var c = _voxels[j + 3];
+
+					voxels[x, z, y] = c;
+				}
+			}
+
+			public int GetMajorityColorIndex(int xx, int yy, int zz, int lodLevel)
+			{
+				xx = Mathf.Min(xx, x - 2);
+				yy = Mathf.Min(yy, y - 2);
+				zz = Mathf.Min(zz, z - 2);
+
+				int[] samples = new int[lodLevel * lodLevel * lodLevel];
+
+				for (int i = 0; i < lodLevel; i++)
+				{
+					for (int j = 0; j < lodLevel; j++)
+					{
+						for (int k = 0; k < lodLevel; k++)
+						{
+							if (xx + i > x - 1 || yy + j > y - 1 || zz + k > z - 1)
+								samples[i * lodLevel * lodLevel + j * lodLevel + k] = int.MaxValue;
+							else
+								samples[i * lodLevel * lodLevel + j * lodLevel + k] = voxels[xx + i, yy + j, zz + k];
+						}
+					}
+				}
+
+				int maxNum = 1;
+				int maxNumIndex = 0;
+
+				int[] numIndex = new int[samples.Length];
+
+				for (int i = 0; i < samples.Length; i++)
+					numIndex[i] = samples[i] == int.MaxValue ? 0 : 1;
+
+				for (int i = 0; i < samples.Length; i++)
+				{
+					for (int j = 0; j < samples.Length; j++)
+					{
+						if (i != j && samples[i] != int.MaxValue && samples[i] == samples[j])
+						{
+							numIndex[i]++;
+							if (numIndex[i] > maxNum)
+							{
+								maxNum = numIndex[i];
+								maxNumIndex = i;
+							}
+						}
+					}
+				}
+
+				return samples[maxNumIndex];
+			}
+
+			public VoxData GetVoxelDataLOD(int level)
+			{
+				if (x <= 1 || y <= 1 || z <= 1)
+					return null;
+
+				level = Mathf.Clamp(level, 0, 16);
+				if (level <= 1)
+					return this;
+
+				if (x <= level && y <= level && z <= level)
+					return this;
+
+				VoxData data = new VoxData();
+				data.x = Mathf.CeilToInt((float)x / level);
+				data.y = Mathf.CeilToInt((float)y / level);
+				data.z = Mathf.CeilToInt((float)z / level);
+
+				data.voxels = new int[data.x, data.y, data.z];
+
+				for (int x = 0; x < data.x; x++)
+				{
+					for (int y = 0; y < data.y; y++)
+					{
+						for (int z = 0; z < data.z; z++)
+						{
+							data.voxels[x, y, z] = this.GetMajorityColorIndex(x * level, y * level, z * level, level);
+						}
+					}
+				}
+
+				return data;
+			}
+		}
+
 		public class VoxFileImport
 		{
 			private static uint[] _paletteDefault = new uint[256]
@@ -106,6 +242,8 @@ namespace Cubizer
 				0xff000022, 0xff000011, 0xff00ee00, 0xff00dd00, 0xff00bb00, 0xff00aa00, 0xff008800, 0xff007700, 0xff005500, 0xff004400, 0xff002200, 0xff001100, 0xffee0000, 0xffdd0000, 0xffbb0000, 0xffaa0000,
 				0xff880000, 0xff770000, 0xff550000, 0xff440000, 0xff220000, 0xff110000, 0xffeeeeee, 0xffdddddd, 0xffbbbbbb, 0xffaaaaaa, 0xff888888, 0xff777777, 0xff555555, 0xff444444, 0xff222222, 0xff111111
 			};
+
+			private static UnityEngine.Object _assetPrefab;
 
 			public static VoxFileData Load(string path)
 			{
@@ -185,9 +323,11 @@ namespace Cubizer
 								throw new System.Exception("Bad Token: chunk nums is " + chunk.xyzi.chunkNums + ",i t should be 0.");
 
 							var voxelNums = reader.ReadInt32();
-							chunk.xyzi.voxels = new byte[voxelNums * 4];
-							if (reader.Read(chunk.xyzi.voxels, 0, chunk.xyzi.voxels.Length) != chunk.xyzi.voxels.Length)
+							var voxels = new byte[voxelNums * 4];
+							if (reader.Read(voxels, 0, voxels.Length) != voxels.Length)
 								throw new System.Exception("Failed to read voxels");
+
+							chunk.xyzi.voxels = new VoxData(voxels, chunk.size.x, chunk.size.y, chunk.size.z);
 
 							voxel.chunkChild[i] = chunk;
 						}
@@ -206,10 +346,8 @@ namespace Cubizer
 
 							voxel.palette.values = new uint[voxel.palette.chunkContent / 4];
 
-							for (int i = 0; i < bytePalette.Length; i += 4)
-							{
-								voxel.palette.values[i / 4] = BitConverter.ToUInt32(bytePalette, i);
-							}
+							for (int i = 4; i < bytePalette.Length; i += 4)
+								voxel.palette.values[i / 4] = BitConverter.ToUInt32(bytePalette, i - 4);
 						}
 						else
 						{
@@ -296,7 +434,68 @@ namespace Cubizer
 				return entities.Count;
 			}
 
-			public static GameObject LoadVoxelFileAsGameObject(VoxFileData voxel, string name)
+			public static GameObject CreateGameObject(string name, VoxData data, Texture2D texture, Color32[] colors, float scale)
+			{
+				var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(data, colors, VOXCruncherMode.Greedy);
+
+				var entities = new Dictionary<string, int>();
+				if (CalcFaceCountAsAllocate(cruncher, colors, ref entities) == 0)
+					throw new System.Exception(name + ": There is no voxel for this file");
+
+				var model = new GameObject(name);
+
+				foreach (var entity in entities)
+				{
+					if (entity.Value == 0)
+						continue;
+
+					var index = 0;
+					var allocSize = entity.Value;
+
+					var vertices = new Vector3[allocSize * 4];
+					var normals = new Vector3[allocSize * 4];
+					var uv = new Vector2[allocSize * 4];
+					var triangles = new int[allocSize * 6];
+
+					bool isTransparent = false;
+
+					foreach (var it in cruncher.voxels)
+					{
+						VOXModel.CreateCubeMesh16x16(it, ref vertices, ref normals, ref uv, ref triangles, ref index, scale);
+						isTransparent |= (colors[it.material].a < 255) ? true : false;
+					}
+
+					if (triangles.Length > 0)
+					{
+						Mesh mesh = new Mesh();
+						mesh.name = "mesh";
+						mesh.vertices = vertices;
+						mesh.normals = normals;
+						mesh.uv = uv;
+						mesh.triangles = triangles;
+
+						var meshFilter = model.AddComponent<MeshFilter>();
+						var meshRenderer = model.AddComponent<MeshRenderer>();
+
+#if UNITY_EDITOR
+						MeshUtility.Optimize(mesh);
+
+						meshFilter.sharedMesh = mesh;
+						meshRenderer.sharedMaterial = new Material(Shader.Find("Mobile/Diffuse"));
+						meshRenderer.sharedMaterial.name = "material";
+						meshRenderer.sharedMaterial.mainTexture = texture;
+#else
+						meshFilter.mesh = mesh;
+						meshRenderer.material = new Material(Shader.Find("Mobile/Diffuse"));
+						meshRenderer.material.mainTexture = texture;
+#endif
+					}
+				}
+
+				return model;
+			}
+
+			public static GameObject LoadVoxelFileAsGameObject(string name, VoxFileData voxel, int lodLevel)
 			{
 				Debug.Assert(!String.IsNullOrEmpty(name));
 
@@ -309,59 +508,31 @@ namespace Cubizer
 					var colors = CreateColor32FromPelatte(voxel.palette.values);
 					var texture = CreateTextureFromColor16x16(colors);
 
-					foreach (var chunk in voxel.chunkChild)
+					if (lodLevel <= 1)
 					{
-						var cruncher = VOXPolygonCruncher.CalcVoxelCruncher(chunk, colors, VOXCruncherMode.Greedy);
-
-						var entities = new Dictionary<string, int>();
-						if (CalcFaceCountAsAllocate(cruncher, colors, ref entities) == 0)
-							throw new System.Exception(name + ": There is no voxel for this file");
-
-						foreach (var entity in entities)
+						foreach (var chunk in voxel.chunkChild)
 						{
-							if (entity.Value == 0)
-								continue;
-
-							var index = 0;
-							var allocSize = entity.Value;
-
-							var vertices = new Vector3[allocSize * 4];
-							var normals = new Vector3[allocSize * 4];
-							var uv = new Vector2[allocSize * 4];
-							var triangles = new int[allocSize * 6];
-
-							bool isTransparent = false;
-
-							foreach (var it in cruncher.voxels)
+							var submesh = CreateGameObject("model", chunk.xyzi.voxels, texture, colors, 1);
+							submesh.transform.parent = gameObject.transform;
+						}
+					}
+					else
+					{
+						foreach (var chunk in voxel.chunkChild)
+						{
+							for (int lod = 1; lod < lodLevel + 1; lod++)
 							{
-								VOXModel.CreateCubeMesh16x16(it, ref vertices, ref normals, ref uv, ref triangles, ref index);
-								isTransparent |= (colors[it.material].a < 255) ? true : false;
+								var submesh = CreateGameObject("lod" + (lod - 1), chunk.xyzi.voxels.GetVoxelDataLOD(lod), texture, colors, lod);
+								submesh.transform.parent = gameObject.transform;
 							}
 
-							if (triangles.Length > 0)
-							{
-								Mesh mesh = new Mesh();
-								mesh.name = "mesh";
-								mesh.vertices = vertices;
-								mesh.normals = normals;
-								mesh.uv = uv;
-								mesh.triangles = triangles;
+							var lodgroup = gameObject.AddComponent<LODGroup>();
+							var lods = lodgroup.GetLODs();
 
-								var meshFilter = gameObject.AddComponent<MeshFilter>();
-								var meshRenderer = gameObject.AddComponent<MeshRenderer>();
-#if UNITY_EDITOR
-								MeshUtility.Optimize(mesh);
+							for (int i = 0; i < gameObject.transform.childCount; i++)
+								lods[i].renderers = new Renderer[] { gameObject.transform.GetChild(i).GetComponent<MeshRenderer>() };
 
-								meshFilter.sharedMesh = mesh;
-								meshRenderer.sharedMaterial = new Material(Shader.Find("Mobile/Diffuse"));
-								meshRenderer.sharedMaterial.name = "material";
-								meshRenderer.sharedMaterial.mainTexture = texture;
-#else
-								meshFilter.mesh = mesh;
-								meshRenderer.material = new Material(Shader.Find("Mobile/Diffuse"));
-								meshRenderer.material.mainTexture = texture;
-#endif
-							}
+							lodgroup.SetLODs(lods);
 						}
 					}
 				}
@@ -377,12 +548,18 @@ namespace Cubizer
 			public static GameObject LoadVoxelFileAsGameObject(string path)
 			{
 				var voxel = VoxFileImport.Load(path);
-				return LoadVoxelFileAsGameObject(voxel, Path.GetFileNameWithoutExtension(path));
+				return LoadVoxelFileAsGameObject(Path.GetFileNameWithoutExtension(path), voxel, 0);
+			}
+
+			public static GameObject LoadVoxelFileAsGameObjectLOD(string path, int lodLevel)
+			{
+				var voxel = VoxFileImport.Load(path);
+				return LoadVoxelFileAsGameObject(Path.GetFileNameWithoutExtension(path), voxel, lodLevel);
 			}
 
 #if UNITY_EDITOR
 
-			public static GameObject LoadVoxelFileAsPrefab(VoxFileData voxel, string name, string path = "Assets/")
+			public static GameObject LoadVoxelFileAsPrefab(VoxFileData voxel, string name, string path = "Assets/", int lodLevel = 0)
 			{
 				Debug.Assert(!String.IsNullOrEmpty(name));
 
@@ -390,31 +567,41 @@ namespace Cubizer
 
 				try
 				{
-					gameObject = LoadVoxelFileAsGameObject(voxel, name);
+					gameObject = LoadVoxelFileAsGameObject(name, voxel, lodLevel);
 
 					var prefabPath = path + name + ".prefab";
+					var prefab = PrefabUtility.CreateEmptyPrefab(prefabPath);
+					var prefabTextures = new Dictionary<string, int>();
 
-					var meshFilter = gameObject.GetComponent<MeshFilter>();
-					if (meshFilter != null)
+					for (int i = 0; i < gameObject.transform.childCount; i++)
 					{
-						AssetDatabase.AddObjectToAsset(meshFilter.sharedMesh, prefabPath);
-					}
+						var subObject = gameObject.transform.GetChild(i);
 
-					var renderer = gameObject.GetComponent<MeshRenderer>();
-					if (renderer != null)
-					{
-						if (renderer.sharedMaterial != null)
+						var meshFilter = subObject.GetComponent<MeshFilter>();
+						if (meshFilter != null)
 						{
-							AssetDatabase.AddObjectToAsset(renderer.sharedMaterial, prefabPath);
-							AssetDatabase.AddObjectToAsset(renderer.sharedMaterial.mainTexture, prefabPath);
+							AssetDatabase.AddObjectToAsset(meshFilter.sharedMesh, prefabPath);
+						}
+
+						var renderer = subObject.GetComponent<MeshRenderer>();
+						if (renderer != null)
+						{
+							if (renderer.sharedMaterial != null)
+							{
+								AssetDatabase.AddObjectToAsset(renderer.sharedMaterial, prefabPath);
+
+								var textureName = renderer.sharedMaterial.mainTexture.name;
+								if (!prefabTextures.ContainsKey(textureName))
+								{
+									prefabTextures.Add(textureName, 1);
+
+									AssetDatabase.AddObjectToAsset(renderer.sharedMaterial.mainTexture, prefabPath);
+								}
+							}
 						}
 					}
 
-					GameObject prefab = PrefabUtility.CreatePrefab(path + name + ".prefab", gameObject);
-					if (prefab == null)
-						UnityEngine.Debug.LogError(Selection.activeObject.name + ": Failed to save prefab");
-
-					return prefab;
+					return PrefabUtility.ReplacePrefab(gameObject, prefab, ReplacePrefabOptions.ReplaceNameBased);
 				}
 				finally
 				{
@@ -422,10 +609,10 @@ namespace Cubizer
 				}
 			}
 
-			public static GameObject LoadVoxelFileAsPrefab(string path, string outpath = "Assets/")
+			public static GameObject LoadVoxelFileAsPrefab(string path, string outpath = "Assets/", int lodLevel = 0)
 			{
 				var voxel = VoxFileImport.Load(path);
-				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path), outpath);
+				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path), outpath, lodLevel);
 			}
 
 #endif

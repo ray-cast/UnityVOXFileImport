@@ -93,17 +93,17 @@ namespace Cubizer
 				}
 			}
 
-			public static void CreateCubeMesh16x16(VOXCruncher it, ref Vector3[] vertices, ref Vector3[] normals, ref Vector2[] uv, ref int[] triangles, ref int index)
+			public static void CreateCubeMesh16x16(VOXCruncher it, ref Vector3[] vertices, ref Vector3[] normals, ref Vector2[] uv, ref int[] triangles, ref int index, float scaling)
 			{
 				Vector3 pos;
-				pos.x = (it.begin_x + it.end_x + 1) * 0.5f;
-				pos.y = (it.begin_y + it.end_y + 1) * 0.5f;
-				pos.z = (it.begin_z + it.end_z + 1) * 0.5f;
+				pos.x = (it.begin.x + it.end.x + 1) * 0.5f * scaling;
+				pos.y = (it.begin.y + it.end.y + 1) * 0.5f * scaling;
+				pos.z = (it.begin.z + it.end.z + 1) * 0.5f * scaling;
 
 				Vector3 scale;
-				scale.x = (it.end_x + 1 - it.begin_x);
-				scale.y = (it.end_y + 1 - it.begin_y);
-				scale.z = (it.end_z + 1 - it.begin_z);
+				scale.x = (it.end.x + 1 - it.begin.x) * scaling;
+				scale.y = (it.end.y + 1 - it.begin.y) * scaling;
+				scale.z = (it.end.z + 1 - it.begin.z) * scaling;
 
 				VOXModel.CreateCubeMesh16x16(ref vertices, ref normals, ref uv, ref triangles, ref index, it.faces, pos, scale, (uint)it.material);
 			}
