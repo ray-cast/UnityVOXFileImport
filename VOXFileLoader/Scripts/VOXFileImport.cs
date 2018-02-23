@@ -370,7 +370,7 @@ namespace Cubizer
 				{
 					uint rgba = palette[j];
 
-					Color32 color;
+					Color32 color = new Color32();
 					color.r = (byte)((rgba >> 0) & 0xFF);
 					color.g = (byte)((rgba >> 8) & 0xFF);
 					color.b = (byte)((rgba >> 16) & 0xFF);
