@@ -22,7 +22,7 @@ Features:
 
 Requirements:
 ========
-* Unity 2017.2.0 or higher
+* Unity 2018.3.0 or higher
 
 Contact:
 ------------
