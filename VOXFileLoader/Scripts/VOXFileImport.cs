@@ -570,7 +570,7 @@ namespace Cubizer
 					gameObject = LoadVoxelFileAsGameObject(name, voxel, lodLevel);
 
 					var prefabPath = path + name + ".prefab";
-					var prefab = PrefabUtility.CreateEmptyPrefab(prefabPath);
+					var prefab = PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
 					var prefabTextures = new Dictionary<string, int>();
 
 					for (int i = 0; i < gameObject.transform.childCount; i++)
@@ -601,7 +601,7 @@ namespace Cubizer
 						}
 					}
 
-					return PrefabUtility.ReplacePrefab(gameObject, prefab, ReplacePrefabOptions.ReplaceNameBased);
+					return PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
 				}
 				finally
 				{
@@ -614,7 +614,6 @@ namespace Cubizer
 				var voxel = VoxFileImport.Load(path);
 				return LoadVoxelFileAsPrefab(voxel, Path.GetFileNameWithoutExtension(path), outpath, lodLevel);
 			}
-
 #endif
 		}
 	}
