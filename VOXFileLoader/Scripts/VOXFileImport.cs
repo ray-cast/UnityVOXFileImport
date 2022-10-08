@@ -570,7 +570,7 @@ namespace Cubizer
 					gameObject = LoadVoxelFileAsGameObject(name, voxel, lodLevel);
 
 					var prefabPath = path + name + ".prefab";
-					var prefab = PrefabUtility.SaveAsPrefabAsset(new GameObject(), prefabPath);
+					var prefab = PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
 					var prefabTextures = new Dictionary<string, int>();
 
 					for (int i = 0; i < gameObject.transform.childCount; i++)
@@ -601,7 +601,7 @@ namespace Cubizer
 						}
 					}
 
-					return PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, prefabPath, InteractionMode.AutomatedAction);
+					return PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
 				}
 				finally
 				{
