@@ -1,3 +1,8 @@
 *.meta
 Standard Assets
 Materials
+/.vs/slnx.sqlite-journal
+/.vs/slnx.sqlite
+/.vs/UnityVOXFileImport/FileContentIndex/read.lock
+/.vs/UnityVOXFileImport/FileContentIndex/a3837b48-a2f8-4f3f-9200-cc9409dc7f75.vsidx
+/.vs/UnityVOXFileImport/FileContentIndex/90c58a4e-188c-4fdc-8685-996b8a5fcc0d.vsidx
